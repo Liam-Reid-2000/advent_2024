@@ -8,62 +8,62 @@ defmodule DayFour do
       |> String.replace("\r", "")
       |> String.split("\n", trim: true)
 
+    part_1(input) |> IO.inspect(label: "Part 1")
+    part_2(input) |> IO.inspect(label: "Part 2")
+  end
+
+  defp part_1(input) do
     horizontal_count = horizontal_count(input)
-    IO.inspect(horizontal_count, label: "Horizontal Count")
-
     vertical_count = vertical_count(input)
-    IO.inspect(vertical_count, label: "Vertical Count")
-
     diagonal_count = diagonal_count(input)
-    IO.inspect(diagonal_count, label: "Diagonal Count normal")
 
     reverse_diagonal_input =
       input
       |> Enum.map(&String.reverse/1)
       |> diagonal_count()
 
-    IO.inspect(reverse_diagonal_input, label: "Diagonal Count reverse")
+    horizontal_count + vertical_count + diagonal_count + reverse_diagonal_input
+  end
 
-    total = horizontal_count + vertical_count + diagonal_count + reverse_diagonal_input
-    IO.inspect(total, label: "Total")
+  defp part_2(input) do
+    list = Enum.map(input, &String.graphemes/1)
+
+    for row <- 0..(@size - 3),
+        col <- 0..(@size - 3) do
+      first = list |> Enum.at(row) |> Enum.at(col)
+      second = list |> Enum.at(row + 2) |> Enum.at(col)
+      third = list |> Enum.at(row + 1) |> Enum.at(col + 1)
+      fourth = list |> Enum.at(row) |> Enum.at(col + 2)
+      fifth = list |> Enum.at(row + 2) |> Enum.at(col + 2)
+
+      cond do
+        third != "A" -> 0
+        first == "M" and second == "M" and fourth == "S" and fifth == "S" -> 1
+        first == "S" and second == "S" and fourth == "M" and fifth == "M" -> 1
+        first == "M" and second == "S" and fourth == "M" and fifth == "S" -> 1
+        first == "S" and second == "M" and fourth == "S" and fifth == "M" -> 1
+        true -> 0
+      end
+    end
+    |> Enum.sum()
   end
 
   defp diagonal_count(input) do
-    list =
-      input
-      |> Enum.map(&String.graphemes/1)
+    list = Enum.map(input, &String.graphemes/1)
 
     for row <- 0..(@size - 4),
         col <- 0..(@size - 4) do
-      start =
-        list
-        |> Enum.at(row)
-        |> Enum.at(col)
+      word =
+        for x <- 0..3 do
+          list
+          |> Enum.at(row + x)
+          |> Enum.at(col + x)
+        end
+        |> Enum.join()
 
-      second =
-        list
-        |> Enum.at(row + 1)
-        |> Enum.at(col + 1)
-
-      third =
-        list
-        |> Enum.at(row + 2)
-        |> Enum.at(col + 2)
-
-      fourth =
-        list
-        |> Enum.at(row + 3)
-        |> Enum.at(col + 3)
-
-      word = start <> second <> third <> fourth
-
-      f = word |> get_line_count("XMAS")
-      b = word |> get_line_count("SAMX")
-
-      f + b
+      if word in ["XMAS", "SAMX"], do: 1, else: 0
     end
     |> Enum.sum()
-    |> IO.inspect()
   end
 
   defp horizontal_count(input) do
