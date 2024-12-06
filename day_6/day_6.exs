@@ -7,16 +7,45 @@ defmodule DaySix do
       |> String.split("\n", trim: true)
       |> Enum.map(&String.graphemes/1)
 
+    # 5453
+    part_1(input) |> IO.inspect(label: "Part 1")
+    # 2188
+    part_2(input) |> IO.inspect(label: "Part 2")
+  end
+
+  defp part_1(input) do
     {x, y} = guard_index(input)
 
     map = mark_x(input, x, y)
-    marked_map = move(map, x, y, :up)
+    marked_map = move(map, x, y, :up, 0)
 
     marked_map
     |> Enum.map(&Enum.count(&1, fn x -> x == "X" end))
     |> Enum.sum()
-    |> IO.inspect()
   end
+
+  defp part_2(map) do
+    {x, y} = guard_index(map)
+    marked_map = move(map, x, y, :up, 0)
+
+    res =
+      for z <- 0..129, t <- 0..129 do
+        if get_cell(marked_map, {z, t}) == "X" do
+          map
+          |> mark_x(z, t, "O")
+          |> move(x, y, :up, 0)
+          |> loop_val()
+        else
+          0
+        end
+      end
+      |> Enum.sum()
+
+    res + 1
+  end
+
+  defp loop_val(:loop), do: 1
+  defp loop_val(_), do: 0
 
   defp guard_index(map) do
     y = Enum.find_index(map, &("^" in &1))
@@ -31,31 +60,34 @@ defmodule DaySix do
 
   defp move(map, _x, _y, :halt), do: map
 
-  defp move(map, x, y, direction) do
+  defp move(map, x, y, direction, iterations \\ 0) do
+    # visualise(map)
     cond do
+      iterations >= 16900 ->
+        :loop
+
       x == 0 and direction == :left ->
         move(map, x, y, :halt)
 
       y == 0 and direction == :up ->
         move(map, x, y, :halt)
 
-      x == 130 and direction == :right ->
+      x == 129 and direction == :right ->
         move(map, x, y, :halt)
 
-      y == 130 and direction == :down ->
+      y == 129 and direction == :down ->
         move(map, x, y, :halt)
 
       true ->
         new_pos = new_pos(x, y, direction)
+        map = mark_x(map, x, y)
 
-        if get_cell(map, new_pos) == "#" do
-          map = mark_x(map, x, y)
+        if get_cell(map, new_pos) in ["#", "O"] do
           direction = change_direction(direction)
-          move(map, x, y, direction)
+          move(map, x, y, direction, iterations)
         else
           {x, y} = new_pos
-          map = mark_x(map, x, y)
-          move(map, x, y, direction)
+          move(map, x, y, direction, iterations + 1)
         end
     end
   end
@@ -76,7 +108,7 @@ defmodule DaySix do
     |> Enum.at(x)
   end
 
-  defp mark_x(map, x, y) do
+  defp mark_x(map, x, y, marker \\ "X") do
     map
     |> Enum.with_index()
     |> Enum.map(fn {row, y_index} ->
@@ -85,7 +117,7 @@ defmodule DaySix do
         |> Enum.with_index()
         |> Enum.map(fn {cell, x_index} ->
           if x_index == x do
-            "X"
+            marker
           else
             cell
           end
@@ -94,6 +126,17 @@ defmodule DaySix do
         row
       end
     end)
+  end
+
+  defp visualise(map) do
+    IO.inspect("##################")
+    IO.inspect("# Advent of Code #")
+    IO.inspect("##################")
+    :timer.sleep(5)
+
+    map
+    |> Enum.map(&Enum.join(&1))
+    |> IO.inspect(limit: :infinity)
   end
 end
 
