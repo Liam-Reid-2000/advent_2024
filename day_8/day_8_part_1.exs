@@ -28,7 +28,7 @@ defmodule DayEight do
       end
     end
     |> List.flatten()
-    |> Enum.reject(fn {x, y} -> x < 0 or y < 0 or x > 49 or y > 49 end)
+    |> Enum.reject(fn {x, y} -> is_nil(x) or is_nil(y) or x < 0 or y < 0 or x > 49 or y > 49 end)
     |> Enum.uniq()
     |> Enum.count()
     |> IO.inspect()
@@ -44,8 +44,6 @@ defmodule DayEight do
     end)
     |> List.flatten()
   end
-
-  # TODO: get inline coordinates
 
   defp ordinates_with_diff(o_ordinate, ordinate, diff) when o_ordinate < ordinate do
     {o_ordinate - diff, ordinate + diff}
